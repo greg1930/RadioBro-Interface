@@ -11,6 +11,10 @@ class Application(Frame):
     def __init__(self,master):
         self.byte_value = 'None'
         self.value_selected = 0
+        self.mylist = []
+        self.labellist = []
+        self.deletebuttonlist = []
+        self.addedbytelist = []
         Frame.__init__(self, master)
         self.grid() #.grid() is used throughout the program as opposed to .pad()
         self.create_widgets() # calls the create_widgets method
@@ -32,13 +36,12 @@ class Application(Frame):
         self.label1 = Label(self) #this label will display the hex value
         self.label1.grid(sticky="W", columnspan=3) # as it is long it has to have a columnspan so that it won't make the other grids unnecessarily big
 
-        self.label2 = Label(self) #this label will display the hex value
-        self.label2.grid(row=4, columnspan=3) # as it is long it has to have a columnspan so that it won't make the other grids unnecessarily big
+  
 
  #       self.entry = Entry(self) #byte text entry
  #       self.entry.grid(sticky="W", row=2, column=0)
 
-        options = {'None','RSSI', 'option2'}
+        options = {'None','Phase of Transmission Procedure','Phase of Receive Initialization','Phase of Receive Procedure','RSSI (dBm)','RSSI (Watts)', 'Carriage Return', 'Line Feed'}
         selection = StringVar()
         selection.set('None')
         self.info_dropdown = OptionMenu(self, selection, *options, command=self.func)
@@ -69,16 +72,133 @@ class Application(Frame):
             self.label1["text"] = hex_values #displays hex values on the GUI
             ser.close()
 
-            if byte=='RSSI':
-                RSSI_value = hex_values[39:41]
-                RSSI_value = bin(int('ca', 16))[2:].zfill(8)
-                RSSI_value = self.twos_comp(int(RSSI_value,2), len(RSSI_value))
-                RSSI_value = 10**((RSSI_value-30)/10)
-                self.label2["text"] = RSSI_value 
+            if byte == 'Phase of Transmission Procedure' or 'Phase of Transmission Procedure' in self.addedbytelist:
+                if 'Phase of Transmission Procedure' not in self.addedbytelist:
+                    self.addedbytelist.append('Phase of Transmission Procedure')
+                self.empty_elements('Phase of Transmission Procedure')
+                PTP = hex_values[33:35]
+                if PTP=='00':
+                    self.mylist.append("Phase of Transmission Procedure - Stand by")
+                if PTP=='01':
+                    self.mylist.append("Phase of Transmission Procedure - Radio being configured, begin key-up")
+                if PTP=='02':
+                    self.mylist.append("Phase of Transmission Procedure - Preparing data")
+                if PTP=='03':
+                    self.mylist.append("Phase of Transmission Procedure - Data is ready to be sent")
+                if PTP=='04':
+                    self.mylist.append("Phase of Transmission Procedure - Sending data")
+                if PTP=='05':
+                    self.mylist.append("Phase of Transmission Procedure - Clearing old packet from buffer")
+                PTP = int(PTP, 16)
+                if PTP>=200:
+                    self.mylist.append("Phase of Transmission Procedure - Data whitening is active")
 
-     
+            if byte=='Phase of Receive Initialization' or 'Phase of Receive Initialization' in self.addedbytelist:
+                if 'Phase of Receive Initialization' not in self.addedbytelist:
+                    self.addedbytelist.append('Phase of Receive Initialization')
+                self.empty_elements('Phase of Receive Initialization')
+                PRI = hex_values[36:38]
+                if PRI=='00':
+                    self.mylist.append("Phase of Receive Initialization - Default set to RX disabled")
+                if PRI=='01':
+                    self.mylist.append("Phase of Receive Initialization - Default set to RX enabled")
+                    
+            if byte=='Phase of Receive Procedure' or 'Phase of Receive Procedure' in self.addedbytelist:
+                if 'Phase of Receive Procedure' not in self.addedbytelist:
+                    self.addedbytelist.append('Phase of Receive Procedure')
+                self.empty_elements('Phase of Receive Procedure')
+                PRP = hex_values[39:41]
+                if PRP=='00':
+                    self.mylist.append("Phase of Receive Procedure - Off")
+                if PRP=='01':
+                    self.mylist.append("Phase of Receive Procedure - No data clocking yet")
+                if PRP=='02':
+                    self.mylist.append("Phase of Receive Procedure - On and waiting for preamble")
+                if PRP=='03':
+                    self.mylist.append("Phase Receive Procedure - On, preamble discovered, waiting on sync word")
+                if PRP=='04':
+                    self.mylist.append("Phase of Receive Procedure - Data being collected, waiting on end flag")
+                if PRP=='05':
+                    self.mylist.append("Phase of Receive Procedure - Processing Data")
+            
+            
+            if 'RSSI (dBm)' in self.addedbytelist or byte == 'RSSI (dBm)':
+                if 'RSSI (dBm)' not in self.addedbytelist:
+                    self.addedbytelist.append('RSSI (dBm)')
+                self.empty_elements('dBm')
+                RSSI_value = hex_values[21:24]
+                RSSI_value = bin(int(RSSI_value, 16))[2:].zfill(8)
+                RSSI_value = self.twos_comp(int(RSSI_value,2), len(RSSI_value))
+                self.mylist.append("RSSI value is %s dBm" % (RSSI_value))
+            
+
+            if byte=='RSSI (Watts)' or 'RSSI (Watts)' in self.addedbytelist:
+                if 'RSSI (Watts)' not in self.addedbytelist:
+                    self.addedbytelist.append('RSSI (Watts)')
+                self.empty_elements('Watts')
+                RSSI_value_power = hex_values[21:24]
+                RSSI_value_power = bin(int(RSSI_value_power, 16))[2:].zfill(8)
+                RSSI_value_power = self.twos_comp(int(RSSI_value_power,2), len(RSSI_value_power))
+                RSSI_value_power = 10**((RSSI_value_power-30)/10)
+                self.mylist.append("RSSI value is %s Watts" % (RSSI_value_power))
+
+            if byte=='Carriage Return' or 'Carriage Return' in self.addedbytelist:
+                if 'Carriage Return' not in self.addedbytelist:
+                    self.addedbytelist.append('Carriage Return')
+                self.empty_elements('Carriage Return')
+                CR = hex_values[45:47]
+                if CR=='0D':
+                    self.mylist.append("Carriage Return - True")
+                else:
+                    self.mylist.append("Carriage Return - False")
+
+            if byte=='Line Feed' or 'Line Feed' in self.addedbytelist:
+                if 'Line Feed' not in self.addedbytelist:
+                    self.addedbytelist.append('Line Feed')
+                self.empty_elements('Line Feed')
+                LF = hex_values[48:50]
+                if LF=='0A':
+                    self.mylist.append("Line Feed - True")
+                else:
+                    self.mylist.append("Line Feed - False")
+
+            self.refresh_list()
+            
+            
+    def print_list(self):
+       
+        for i,selections in enumerate(self.mylist, start=4):
+            
+            self.label = Label(self)
+            self.label["text"] = selections
+            self.label.grid(row = i, columnspan=3, column=0, sticky="W")
+            self.labellist.append(self.label)
+            self.delete_button = Button(self,text="Delete", command=lambda : self.delete_element(selections))
+            self.delete_button.grid(row = i, column=3, sticky="E")
+            self.deletebuttonlist.append(self.delete_button)
+            
+
+                  
+                
+            
  #       byte_entry = self.entry.get()
          #byte_entry*3 - split
+
+    def delete_element(self,element):
+        print(element)
+        self.mylist.remove(element)
+        self.refresh_list()
+
+    def refresh_list(self):
+        for selections in self.labellist:
+            self.label.destroy()
+        for selections in self.deletebuttonlist:
+            self.delete_button.destroy()
+        self.print_list()
+
+    def empty_elements(self,string):
+        keywordFilter = set([string])
+        self.mylist = [str for str in self.mylist if not any(i in str for i in keywordFilter)]
     
     def twos_comp(self,val, bits):
         if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
@@ -87,7 +207,7 @@ class Application(Frame):
 
 root = Tk()
 root.title("test") #title of the window
-root.geometry("450x350") #size of the window
+root.geometry("560x350") #size of the window
 
 listbox = Listbox(root) #creates the listbox for port selection
 listbox['height'] = 10
