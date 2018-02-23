@@ -488,10 +488,22 @@ class setup(Frame): #this class deals with showing both radio and satellite tele
                 time_hours=int(time_hours,16)
                 csv_array[3] = time_hours
                 print("HOURS %s"%(time_hours))
+                
+                temp1 = csv_array[4]
+                temp1 = bin(int(temp1, 16))[2:].zfill(8)
+                temp1 = self.twos_comp(int(temp1,2), len(temp1))
+                csv_array[4] = temp1
+                
+                temp2 = csv_array[5]
+                temp2 = bin(int(temp2, 16))[2:].zfill(8)
+                temp2 = self.twos_comp(int(temp2,2), len(temp2))
+                csv_array[5] = temp2
+                
+                
                 #freeze_detect=hex_string[10:12]
                 #freeze_detect=int(freeze_detect,16)
                 #print("FREEZE DETECT %s" % (freeze_detect))
-                
+             
                 gx.append(csv_array[29])
                 gx.append(csv_array[28])
                 gx.append(csv_array[27])
@@ -499,28 +511,31 @@ class setup(Frame): #this class deals with showing both radio and satellite tele
                 gxTempString="".join(gx)
                 print(gxTempString)
                 gyroX=struct.unpack('!f',gxTempString.decode('hex'))[0]
-                csv_array[26:30] = gyroX
-                
-                gy.append(csv_array[33])
-                gy.append(csv_array[32])
-                gy.append(csv_array[31])
+                csv_array[26:29] = ''
+                csv_array[26] = gyroX
+              
                 gy.append(csv_array[30])
+                gy.append(csv_array[29])
+                gy.append(csv_array[28])
+                gy.append(csv_array[27])
                 gyTempString="".join(gy)           
                 gyroY=struct.unpack('!f',gyTempString.decode('hex'))[0]
-               
+                csv_array[27:30] = ''
+                csv_array[27] = gyroY
                 
-                gz.append(csv_array[37])
-                gz.append(csv_array[36])
-                gz.append(csv_array[35])
-                gz.append(csv_array[34])
+                gz.append(csv_array[31])
+                gz.append(csv_array[30])
+                gz.append(csv_array[29])
+                gz.append(csv_array[28])
                 gzTempString="".join(gz)
                 gyroZ=struct.unpack('!f',gzTempString.decode('hex'))[0]
-                
+                csv_array[28:31] = ''
+                csv_array[28] = gyroZ 
                 
                 csvFile=open('C:\Users\Alex\GUI\guiOutput.csv','ab')
                 with csvFile:
                     writer = csv.writer(csvFile)
-                    writer.writerow(time_seconds,time_minutes,time_hours,gyroX,gyroY,gyroZ)
+                    writer.writerow(csv_array)
                 
                 print("GYRO X %s" % (gyroX))
                 print("GYRO Y %s" % (gyroY))
@@ -540,11 +555,11 @@ class setup(Frame): #this class deals with showing both radio and satellite tele
                     
                 self.updateBytes(True,None) #display the changes
             
-            else: 
+            elif hex_string=='42': 
                 hex_string_2 = self.radio.readBytes(7) #check for beacon
                 hex_string = "".join([hex_string,hex_string_2])
                 if '426561636f6e' in hex_string:
-                    hex_values.append(hex_string)
+                    hex_values.append('BEACON')
                     print('BEACON') 
                 else: #assume housekeeping packet
                     hex_string_2 = self.radio.readBytes(9)
@@ -570,7 +585,6 @@ class setup(Frame): #this class deals with showing both radio and satellite tele
                 print(items)
                 if byte==items or self.in_list(byte,self.selectedBytes):
                     radioItem = True
-                    print('NOW TRUE')
                     
             if radioItem==False:
                 for i,item in enumerate(self.options):
