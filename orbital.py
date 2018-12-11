@@ -30,7 +30,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
-from pyorbital import astronomy, tlefile
+#from pyorbital import astronomy, tlefile
 
 ECC_EPS = 1.0e-6  # Too low for computing further drops.
 ECC_LIMIT_LOW = -1.0e-3

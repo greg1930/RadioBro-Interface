@@ -21,7 +21,7 @@ import csv
 from PIL import Image,ImageTk
 import os
 import random
-from pyorbital import orbital
+#from pyorbital import orbital
 #from orbital import tlefile
 from datetime import datetime
 import matplotlib
@@ -57,8 +57,8 @@ class menu: #this class creates and displays the preferences menu
         self.HFCSelection.set('False')
         #self.path.set('/users/gregstewart96/Desktop/unisat6.txt')
         self.path.set('C:\Users\Alex\GUI\unisat6.txt')
-        #self.wPath.set('/users/gregstewart96/desktop') #default write path
-        self.wPath.set("C:\\Users\\Alex\\GUI\\")
+        self.wPath.set('/users/gregstewart96/desktop') #default write path
+        #self.wPath.set("C:\\Users\\Alex\\GUI\\")
         self.TLEPath = self.path.get() #stores the stringVar() in a variable
         self.writePathVar = self.wPath.get() #stores the stringVar() in a variable
         self.write.set('1')
@@ -272,7 +272,7 @@ class setup(Frame): #this class deals with showing both radio and satellite tele
         self.grid_propagate(0) #force the size of the frame
         self.grid() #.grid() is used throughout the program as opposed to .pad()
         self.create_widgets() # calls the create_widgets method
- 		
+         
     
 
     def add_whitespace(self, string, length): # function which returns a string with spaces in it when given the input string and after how many characters there should be a space, as parameters
@@ -291,7 +291,7 @@ class setup(Frame): #this class deals with showing both radio and satellite tele
         
         required_width= root.winfo_screenwidth()/4.615
         required_height= root.winfo_screenheight()/3.6
-        img = Image.open('C:\Users\Alex\GUI\logo.gif')
+        img = Image.open('/Users/gregstewart96/Documents/LaTex/Images/Alba.gif')
         img = img.resize((int(round(required_width)),int(round(required_height))),Image.ANTIALIAS)
         img = ImageTk.PhotoImage(img)
         logo = Label(self,image=img)
@@ -432,7 +432,8 @@ class setup(Frame): #this class deals with showing both radio and satellite tele
         self.startButton['state']='normal'
         self.endButton['state']='disabled'
             
-    def readThread(self):
+    """thread for contantly listening for new values, decoding data and populating CSV file"""
+    def readThread(self): 
         hex_values=[]
         packet_count = 0
         while self.endListeningFlag==False:
@@ -458,24 +459,7 @@ class setup(Frame): #this class deals with showing both radio and satellite tele
                 hex_values.append(hex_string) #this line stores the hex values (in ASCII) received to hex_values
                 csv_array = [hex_string[i:i + 2] for i in range(0, len(hex_string), 2)]
                 self.setLatestSatellitePacket(csv_array)
-                """
-                tempArray=[] # temp array for concatenating bytes
-                csv_array=[]
-                for i in range(0, len(hex_string), 2):
-                    if i>=52 and i<=74: #for gx,gy,gx
-                        tempArray.append(hex_string[i:i+2])
-                        if len(tempArray)==12:
-                            for j in range(0,len(tempArray), 4):
-                                joiner = "".join(tempArray[j:j+4])
-                                print(joiner)
-                                csv_array.append(struct.unpack('!f',joiner.decode('hex'))[0])
-                            tempArray=[]
-                    
-                    elif i>=2 and i<=6: # for seconds,minutes,hours
-                        csv_array.append(int(hex_string[i:i+2],16))
-                    else:
-                        csv_array.append(hex_string[i:i+2])
-                """            
+                         
                 time_seconds=csv_array[1]
                 time_seconds=int(time_seconds,16)
                 csv_array[1] = time_seconds
@@ -802,7 +786,7 @@ class setup(Frame): #this class deals with showing both radio and satellite tele
 
      
         
-    	 
+       
 
 class temperature(Frame): #class to display the temperature telemetry
 
@@ -1138,7 +1122,7 @@ class showStamps: #used to display timestamps
 class Radio: #class used to avoid code duplication of serial reads/writes
 
     def __init__(self):
-	    self.ser=serial.Serial()
+        self.ser=serial.Serial()
     
     def openPort(self, port, baud, parity, databits, stopbits, dfc):
         try:
@@ -1315,6 +1299,7 @@ notebook.grid()
 
 
 menuClass = menu(root) #create instance of menu class. Pass in root to allow the class to add things to it
+
 radio = Radio()
 stamps = showStamps(root,menuClass) #creates instance of showStamps. This is created now as we want to use the same instance throughout the entire system
 Setup = setup(setupFrame,menuClass,stamps,radio) #call the setup class. Pass in the setupFrame so we can add to it, menu class instance so we can access the settings and our showStamps instance
